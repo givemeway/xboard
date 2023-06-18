@@ -4,9 +4,9 @@ shopt -s expand_aliases
 
 # Override baseUrl in cypress.json
 # https://docs.cypress.io/guides/references/configuration.html#Environment-Variables
-export CYPRESS_BASE_URL=http://localhost:8081
+export CYPRESS_BASE_URL=http://localhost:5500
 
-FE_PORT=8081
+FE_PORT=5500
 FE_NODE_DIR="$PWD"
 
 # exit on non-zero return code

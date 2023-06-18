@@ -1,5 +1,3 @@
-// Array.from(magazines).forEach((ele) => console.log(ele));
-
 async function fetch_rss_topics(topicURL) {
   const url = "https://api.rss2json.com/v1/api.json?rss_url=" + topicURL;
   let res = await fetch(url);
@@ -8,7 +6,7 @@ async function fetch_rss_topics(topicURL) {
 }
 
 const topics = [
-  "https://flipboard.com/topic/sports.rss`",
+  "https://flipboard.com/topic/politics.rss",
   "https://flipboard.com/topic/space.rss",
   "https://flipboard.com/topic/sports.rss",
 ];
@@ -16,6 +14,7 @@ const topics = [
 function createCarouselInner(feeds) {
   let divInner = document.createElement("div");
   divInner.classList.add("carousel-inner");
+  console.log(feeds);
   feeds.forEach((feed, idx, arr) => {
     let carouselItem = document.createElement("div");
     if (idx === 0) {
@@ -38,7 +37,13 @@ function createCard(item) {
   img.setAttribute("alt", "...");
   img.setAttribute("src", `${item.enclosure.link}`);
 
-  divOuter.appendChild(img);
+  let anchor_img = document.createElement("a");
+  anchor_img.setAttribute("href", `${item.link}`);
+  anchor_img.classList.add("nav-link");
+  anchor_img.setAttribute("id", "img-anchor");
+  anchor_img.setAttribute("target", "_blank");
+  anchor_img.appendChild(img);
+  divOuter.appendChild(anchor_img);
 
   let divBody = document.createElement("div");
   divBody.classList.add("card-body");
@@ -68,6 +73,7 @@ function createCard(item) {
 
   let anchor = document.createElement("a");
   anchor.setAttribute("href", `${item.link}`);
+  anchor.setAttribute("target", "_blank");
   anchor.classList.add("nav-link");
 
   anchor.appendChild(description);
@@ -76,12 +82,8 @@ function createCard(item) {
   return divOuter;
 }
 
-function createCarouselOuter(carouselId, direction, idx, arr) {
-  console.log(arr);
+function createCarouselOuter(carouselId, direction, idx, slide, arr) {
   const len = arr.length;
-  // let right = len - 1;
-  // let left = 0;
-  let currentSlide = 0;
   let btn = document.createElement("button");
   btn.setAttribute("data-bs-target", `#${carouselId}`);
   btn.setAttribute(
@@ -89,28 +91,26 @@ function createCarouselOuter(carouselId, direction, idx, arr) {
     (dir = direction === "left" ? "prev" : "next")
   );
   btn.setAttribute("id", `${carouselId}-${idx}`);
-  // if (direction === "right") {
-  //   btn.style.display = "block";
-  // } else {
-  //   btn.style.display = "none";
-  // }
+  if (direction === "right") {
+    btn.style.display = "flex";
+  } else {
+    btn.style.display = "none";
+  }
 
   btn.addEventListener("click", function (event) {
     if (event.target.getAttribute("data-bs-slide") === "next") {
-      if (currentSlide < len - 1) {
-        currentSlide++;
+      if (slide.currentSlide < len - 1) {
+        slide.currentSlide++;
         let leftButton = document.getElementById(`${carouselId}-${idx - 1}`);
         let rightButton = document.getElementById(`${carouselId}-${idx}`);
-        updateButtons(leftButton, rightButton, currentSlide, len);
-        console.log(arr.length, "right", currentSlide);
+        updateButtons(leftButton, rightButton, slide.currentSlide, len);
       }
     } else {
-      if (currentSlide > 0) {
-        currentSlide--;
+      if (slide.currentSlide > 0) {
+        slide.currentSlide--;
         let leftButton = document.getElementById(`${carouselId}-${idx}`);
         let rightButton = document.getElementById(`${carouselId}-${idx + 1}`);
-        updateButtons(leftButton, rightButton, currentSlide, len);
-        console.log(arr.length, "left", currentSlide);
+        updateButtons(leftButton, rightButton, slide.currentSlide, len);
       }
     }
   });
@@ -125,13 +125,13 @@ function updateButtons(leftButton, rightButton, currentSlide, len) {
   if (currentSlide === 0) {
     leftButton.style.display = "none";
   } else {
-    leftButton.style.display = "block";
+    leftButton.style.display = "flex";
   }
 
   if (currentSlide === len - 1) {
     rightButton.style.display = "none";
   } else {
-    rightButton.style.display = "block";
+    rightButton.style.display = "flex";
   }
 }
 
@@ -187,11 +187,14 @@ function createAccordionItem(
   accordionCollapse.setAttribute("id", collapseId);
 
   let accordionBody = document.createElement("div");
+  let slide = { currentSlide: 0 };
   accordionBody.classList.add("accordion-body");
-  accordionBody.appendChild(createCarouselOuter(carouselId, "left", idx, arr));
+  accordionBody.appendChild(
+    createCarouselOuter(carouselId, "left", idx, slide, arr)
+  );
   accordionBody.appendChild(carousel);
   accordionBody.appendChild(
-    createCarouselOuter(carouselId, "right", idx + 1, arr)
+    createCarouselOuter(carouselId, "right", idx + 1, slide, arr)
   );
 
   accordionCollapse.appendChild(accordionBody);
@@ -222,7 +225,7 @@ function populateAccordion(accordionId, idx, topic, topicParam) {
 
 const accordionId = "crio-feed-accordion";
 
-Array.from(magazines).forEach((topicURL, idx) => {
+Array.from(topics).forEach((topicURL, idx) => {
   fetch_rss_topics(topicURL).then((topic) => {
     const len = topicURL.split("/").length;
     const topicParam = topicURL.split("/")[len - 1].split(".rss")[0];
